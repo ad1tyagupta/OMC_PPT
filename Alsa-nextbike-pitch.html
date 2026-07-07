@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alsa-nextbike · Online Marketing Challenge 2026</title>
+
+<!-- Fonts: Fraunces (editorial serif) + Satoshi (geometric sans) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+
+<style>
+/* ===========================================
+   NIGHT RIDE THEME — Alsa-nextbike brand, inverted
+   =========================================== */
+:root{
+  --bg:#0e2635;             /* deep navy canvas */
+  --bg2:#123448;            /* gradient partner */
+  --stage-bg:#081b26;       /* letterbox */
+  --navy:#18425a;
+  --teal:#0a7d99;
+  --cyan:#00a8d8;           /* bright accent */
+  --cyan-soft:rgba(0,168,216,.16);
+  --ink:#eaf4f8;            /* light text */
+  --muted:#8fb2c0;          /* secondary */
+  --panel:rgba(255,255,255,.05);
+  --panel-line:rgba(255,255,255,.12);
+  --white:#ffffff;
+  --c-scale:#00a8d8; --c-test:#7d99a6; --c-sanjuan:#4a72c9; --c-push:#e9f3f7;
+
+  --font-display:'Fraunces', Georgia, serif;
+  --font-body:'Satoshi','Helvetica Neue', Arial, sans-serif;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --dur:.7s;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+
+/* ============ FIXED 16:9 STAGE (viewport-base) ============ */
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--stage-bg);}
+.deck-viewport{position:fixed;inset:0;overflow:hidden;background:var(--stage-bg);}
+.deck-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;transform-origin:0 0;background:linear-gradient(150deg,var(--bg) 0%,var(--bg2) 100%);}
+.slide{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;display:block;visibility:hidden;opacity:0;pointer-events:none;background:linear-gradient(150deg,var(--bg) 0%,var(--bg2) 100%);}
+.slide.active,.slide.visible{visibility:visible;opacity:1;pointer-events:auto;z-index:1;}
+img,video,canvas,svg{max-width:100%;max-height:100%;}
+.deck-controls{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:1000;}
+@media print{
+  html,body{width:1920px;height:auto;overflow:visible;background:#fff;}
+  .deck-viewport{position:static;overflow:visible;background:#fff;}
+  .deck-stage{position:static;width:auto;height:auto;transform:none!important;background:none;}
+  .slide{position:relative;display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;width:1920px;height:1080px;break-after:page;page-break-after:always;}
+  .slide:last-child{break-after:auto;page-break-after:auto;}
+  .deck-controls{display:none!important;}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.2s!important;}}
+
+/* ============ REVEALS ============ */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease);transition-delay:calc(var(--d,0)*1s);}
+.slide.visible .reveal{opacity:1;transform:translateY(0);}
+
+/* ============ ROUTE-LINE MOTIF ============ */
+.route-bg{position:absolute;inset:0;pointer-events:none;opacity:.35;}
+.route-bg path{fill:none;stroke:var(--cyan);stroke-width:3;stroke-dasharray:14 16;}
+.slide.visible .route-bg path{animation:routeDraw 2.4s var(--ease) forwards;}
+@keyframes routeDraw{from{stroke-dashoffset:900;}to{stroke-dashoffset:0;}}
+.route-bg circle{fill:var(--cyan);}
+
+/* ============ SHARED FURNITURE ============ */
+.slide-inner{position:absolute;inset:0;padding:64px 92px;font-family:var(--font-body);color:var(--ink);}
+.s-head{display:flex;align-items:baseline;gap:26px;margin-bottom:34px;}
+.s-num{font-family:var(--font-display);font-style:italic;font-weight:400;font-size:30px;color:var(--cyan);}
+.s-title{font-family:var(--font-display);font-weight:600;font-size:60px;line-height:1;color:var(--white);letter-spacing:-.01em;}
+.s-title em{font-style:italic;color:var(--cyan);}
+.label{font-weight:700;font-size:18px;letter-spacing:.18em;text-transform:uppercase;color:var(--cyan);}
+.muted{color:var(--muted);}
+
+/* ============ SLIDE 1 · TITLE ============ */
+.t-wrap{position:absolute;inset:0;padding:0 110px;display:flex;align-items:center;}
+.t-left{width:56%;}
+.t-kicker{font-weight:900;font-size:26px;letter-spacing:.34em;text-transform:uppercase;color:var(--cyan);}
+.t-main{font-family:var(--font-display);font-weight:600;font-size:148px;line-height:.97;color:var(--white);letter-spacing:-.02em;margin-top:34px;}
+.t-main em{font-style:italic;color:var(--cyan);display:block;}
+.t-sub{font-size:27px;color:var(--muted);margin-top:36px;max-width:640px;line-height:1.5;}
+.t-photo{position:absolute;right:110px;top:250px;width:520px;height:520px;border-radius:50%;background-size:cover;background-position:center;box-shadow:0 0 0 14px rgba(0,168,216,.14),0 0 0 2px var(--cyan),0 34px 80px rgba(0,0,0,.5);}
+.t-badge{position:absolute;right:560px;top:calc(50% + 180px);background:var(--cyan);color:#062130;font-weight:900;font-size:21px;letter-spacing:.08em;padding:14px 26px;border-radius:999px;text-transform:uppercase;box-shadow:0 14px 34px rgba(0,168,216,.4);}
+.t-foot{position:absolute;left:110px;right:110px;bottom:56px;display:flex;align-items:center;justify-content:space-between;}
+.t-team{display:flex;gap:38px;font-size:23px;font-weight:500;color:var(--ink);opacity:.92;}
+.t-team span::before{content:"·";color:var(--cyan);margin-right:14px;font-weight:900;}
+.t-team span:first-child::before{content:"";margin:0;}
+.logo-pill{display:flex;align-items:center;gap:28px;background:var(--white);border-radius:14px;padding:14px 26px;}
+.logo-pill img{height:44px;width:auto;object-fit:contain;}
+.logo-pill .sep{width:1px;height:42px;background:#dfe6ea;}
+
+/* ============ SLIDE 2 · CLIENT ASK ============ */
+.count-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:60px;margin-top:10px;}
+.count-cell{border-left:3px solid var(--cyan);padding-left:34px;}
+.count-cell .big{font-family:var(--font-display);font-weight:600;font-size:132px;line-height:1;color:var(--white);font-variant-numeric:tabular-nums;}
+.count-cell .big small{font-size:64px;color:var(--cyan);}
+.count-cell .cap{font-size:24px;color:var(--muted);margin-top:12px;}
+.ask-line{margin-top:44px;font-size:29px;line-height:1.5;color:var(--ink);max-width:1350px;}
+.ask-line b{color:var(--cyan);font-weight:700;}
+/* horizontal route funnel */
+.hroute{position:relative;margin-top:96px;height:250px;}
+.hroute .line{position:absolute;left:2%;right:2%;top:58px;border-top:4px dashed rgba(0,168,216,.55);}
+.station{position:absolute;top:0;width:24%;transform:translateX(-50%);text-align:center;}
+.station .dot{width:26px;height:26px;border-radius:50%;background:var(--bg);border:5px solid var(--cyan);margin:46px auto 0;position:relative;z-index:2;}
+.station.end .dot{background:var(--cyan);box-shadow:0 0 0 10px rgba(0,168,216,.18),0 0 30px rgba(0,168,216,.65);}
+.station .st-t{font-family:var(--font-display);font-weight:600;font-size:29px;color:var(--white);margin-top:22px;}
+.station .st-s{font-size:20px;color:var(--muted);margin-top:8px;line-height:1.35;}
+.station.end .st-t{color:var(--cyan);}
+
+/* ============ SLIDE 3 · SOLUTION ============ */
+.sol-grid{display:grid;grid-template-columns:.72fr 1.28fr;gap:80px;height:calc(100% - 130px);}
+.sol-left{display:flex;flex-direction:column;min-height:0;}
+/* vertical route funnel */
+.vroute{position:relative;padding-left:46px;flex:1;min-height:0;display:flex;flex-direction:column;justify-content:space-between;padding-top:8px;padding-bottom:8px;}
+.vroute::before{content:"";position:absolute;left:12px;top:26px;bottom:26px;border-left:4px dashed rgba(0,168,216,.55);}
+.vstop{position:relative;}
+.vstop::before{content:"";position:absolute;left:-46px;top:6px;width:22px;height:22px;border-radius:50%;background:var(--bg);border:5px solid var(--cyan);}
+.vstop:last-child::before{background:var(--cyan);box-shadow:0 0 22px rgba(0,168,216,.7);}
+.vstop .vt{font-family:var(--font-display);font-weight:600;font-size:34px;color:var(--white);}
+.vstop .vt span{color:var(--cyan);}
+.vstop .vs{font-size:21px;color:var(--muted);margin-top:8px;line-height:1.4;max-width:420px;}
+/* persona tabs */
+.ptabs{display:flex;gap:16px;margin-bottom:26px;}
+.ptab{flex:1;border:2px solid var(--panel-line);background:var(--panel);color:var(--muted);border-radius:14px;padding:18px 22px;cursor:pointer;font-family:var(--font-body);font-weight:700;font-size:26px;text-align:left;transition:all .3s var(--ease);}
+.ptab .age{display:block;font-weight:500;font-size:19px;margin-top:3px;opacity:.8;}
+.ptab.on{border-color:var(--cyan);background:var(--cyan-soft);color:var(--white);box-shadow:0 12px 34px rgba(0,168,216,.18);}
+.ptab.on .age{color:var(--cyan);}
+.ppanel{display:none;background:var(--panel);border:1px solid var(--panel-line);border-radius:20px;overflow:hidden;height:520px;}
+.ppanel.on{display:grid;grid-template-columns:380px 1fr;}
+.ppanel .pph{background-size:cover;background-position:center;}
+.ppanel .pbd{padding:38px 44px;display:flex;flex-direction:column;}
+.ppanel .prole{font-weight:700;font-size:22px;letter-spacing:.12em;text-transform:uppercase;color:var(--cyan);}
+.ppanel .pquote{font-family:var(--font-display);font-style:italic;font-weight:400;font-size:37px;line-height:1.25;color:var(--white);margin:20px 0 26px;}
+.ppanel ul{list-style:none;display:flex;flex-direction:column;gap:14px;}
+.ppanel li{display:flex;gap:14px;font-size:23px;color:var(--ink);line-height:1.35;}
+.ppanel li::before{content:"—";color:var(--cyan);font-weight:900;}
+.sol-why{margin-top:24px;font-size:22px;color:var(--muted);line-height:1.45;}
+.sol-why b{color:var(--cyan);}
+.tap-hint{font-size:18px;color:var(--muted);margin-top:14px;display:flex;align-items:center;gap:8px;}
+.tap-hint i{font-style:normal;color:var(--cyan);}
+
+/* ============ SLIDE 4 · PLAN ============ */
+.plan-grid{display:grid;grid-template-columns:.92fr 1.06fr 1.02fr;gap:64px;height:calc(100% - 130px);}
+.kpi-big{border-left:3px solid var(--cyan);padding-left:30px;margin-bottom:40px;}
+.kpi-big .n{font-family:var(--font-display);font-weight:600;font-size:96px;line-height:1;color:var(--white);font-variant-numeric:tabular-nums;}
+.kpi-big .n small{font-size:52px;color:var(--cyan);}
+.kpi-big .c{font-size:23px;color:var(--muted);margin-top:8px;}
+.donut-wrap{display:flex;flex-direction:column;align-items:center;}
+.donut{position:relative;width:400px;height:400px;margin-top:6px;}
+.donut svg{transform:rotate(-90deg);overflow:visible;}
+.donut .seg{cursor:pointer;transition:stroke-width .25s var(--ease),opacity .25s;pointer-events:visibleStroke;}
+.donut.hovering .seg{opacity:.32;}
+.donut.hovering .seg:hover{opacity:1;stroke-width:58;}
+.donut .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
+.donut .center .big{font-family:var(--font-display);font-weight:600;font-size:62px;color:var(--white);line-height:1;}
+.donut .center .sub{font-size:22px;color:var(--muted);margin-top:8px;text-align:center;line-height:1.3;}
+.legend{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 24px;margin-top:26px;}
+.legend span{display:flex;align-items:center;gap:9px;font-size:20px;color:var(--ink);}
+.legend i{width:15px;height:15px;border-radius:4px;display:inline-block;}
+/* vertical week route */
+.wroute{position:relative;padding-left:44px;}
+.wroute::before{content:"";position:absolute;left:11px;top:14px;bottom:14px;border-left:4px dashed rgba(0,168,216,.5);}
+.wstop{position:relative;padding-bottom:34px;}
+.wstop:last-child{padding-bottom:0;}
+.wstop::before{content:"";position:absolute;left:-44px;top:4px;width:20px;height:20px;border-radius:50%;background:var(--bg);border:5px solid var(--cyan);}
+.wstop:last-child::before{background:var(--cyan);box-shadow:0 0 18px rgba(0,168,216,.7);}
+.wstop .wk{font-weight:700;font-size:20px;color:var(--cyan);letter-spacing:.06em;}
+.wstop .ph{font-family:var(--font-display);font-weight:600;font-size:31px;color:var(--white);margin-top:2px;}
+.wstop .ds{font-size:20px;color:var(--muted);margin-top:6px;line-height:1.4;}
+.seqnote{margin-top:30px;font-size:20px;line-height:1.45;color:var(--muted);border-top:1px solid var(--panel-line);padding-top:20px;}
+.seqnote b{color:var(--cyan);}
+
+/* ============ SLIDE 5 · MESSAGES (flip cards + phone) ============ */
+.msg-grid{display:grid;grid-template-columns:1.58fr 1fr;gap:60px;height:calc(100% - 128px);}
+.flip-grid{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:26px;}
+.flip{perspective:1400px;cursor:pointer;}
+.flip .fin{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .7s var(--ease);}
+.flip.flipped .fin{transform:rotateY(180deg);}
+.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:18px;overflow:hidden;}
+.face.front{background-size:cover;background-position:center 28%;}
+.face.front .grad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,27,38,0) 30%,rgba(8,27,38,.88) 100%);}
+.face.front .ft{position:absolute;left:24px;right:24px;bottom:20px;font-family:var(--font-display);font-weight:600;font-size:30px;line-height:1.12;color:#fff;}
+.face.front .flag{position:absolute;top:16px;right:16px;background:rgba(0,168,216,.92);color:#062130;font-weight:900;font-size:15px;letter-spacing:.06em;padding:7px 13px;border-radius:999px;}
+.face.back{background:linear-gradient(160deg,var(--teal),var(--navy));transform:rotateY(180deg);padding:30px 32px;display:flex;flex-direction:column;justify-content:center;}
+.face.back .bt{font-weight:700;font-size:17px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.75);margin-bottom:14px;}
+.face.back .bc{font-family:var(--font-display);font-style:italic;font-size:25px;line-height:1.4;color:#fff;}
+/* phone mockup */
+.phone-col{display:flex;flex-direction:column;align-items:center;}
+.phone{width:352px;height:664px;background:#040d14;border-radius:52px;border:3px solid rgba(255,255,255,.16);box-shadow:0 40px 90px rgba(0,0,0,.55);position:relative;padding:16px;}
+.phone .notch{position:absolute;top:16px;left:50%;transform:translateX(-50%);width:120px;height:30px;background:#040d14;border-radius:0 0 18px 18px;z-index:3;}
+.phone .scr{width:100%;height:100%;border-radius:38px;overflow:hidden;background:linear-gradient(165deg,#14425c 0%,#0a2334 70%,#071722 100%);position:relative;}
+.phone .clock{text-align:center;margin-top:84px;font-weight:500;font-size:76px;color:#fff;font-family:var(--font-body);letter-spacing:.01em;}
+.phone .date{text-align:center;font-size:21px;color:rgba(255,255,255,.75);margin-top:2px;}
+.notif{margin:36px 16px 0;background:rgba(255,255,255,.14);backdrop-filter:blur(10px);border-radius:22px;padding:16px 18px;animation:notifIn .5s var(--ease);}
+@keyframes notifIn{from{opacity:0;transform:translateY(-18px) scale(.96);}to{opacity:1;transform:none;}}
+.notif .nhead{display:flex;align-items:center;gap:10px;}
+.notif .napp{width:30px;height:30px;border-radius:8px;background:var(--cyan);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:#062130;}
+.notif .nname{font-weight:700;font-size:16px;color:#fff;flex:1;}
+.notif .ntime{font-size:14px;color:rgba(255,255,255,.65);}
+.notif .nbody{font-size:17.5px;line-height:1.4;color:#fff;margin-top:9px;}
+.push-nav{display:flex;align-items:center;gap:14px;margin-top:26px;}
+.push-nav button{background:var(--panel);border:1px solid var(--panel-line);color:var(--ink);width:44px;height:44px;border-radius:50%;font-size:20px;cursor:pointer;transition:all .25s;}
+.push-nav button:hover{border-color:var(--cyan);color:var(--cyan);}
+.push-dots{display:flex;gap:9px;}
+.push-dots i{width:11px;height:11px;border-radius:50%;background:var(--panel-line);transition:background .25s;}
+.push-dots i.on{background:var(--cyan);}
+.push-cap{font-size:19px;color:var(--muted);margin-top:16px;text-align:center;}
+.push-cap b{color:var(--cyan);}
+
+/* ============ SLIDE 6 · LIMITATIONS (flip) ============ */
+.lim-row{display:grid;grid-template-columns:1fr 1fr;gap:44px;margin-top:16px;height:520px;}
+.lim-row .face.frontc{background:var(--panel);border:1px solid var(--panel-line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:40px;}
+.lim-row .face.frontc .ic{font-size:60px;line-height:1;}
+.lim-row .face.frontc .ct{font-family:var(--font-display);font-weight:600;font-size:44px;color:var(--white);text-align:center;line-height:1.15;}
+.lim-row .face.frontc .hint{font-size:19px;color:var(--cyan);letter-spacing:.1em;text-transform:uppercase;font-weight:700;}
+.lim-row .face.backc{background:linear-gradient(160deg,var(--teal),var(--navy));transform:rotateY(180deg);padding:48px 54px;display:flex;flex-direction:column;justify-content:center;gap:24px;}
+.lim-row .face.backc .bt{font-weight:700;font-size:18px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.72);}
+.lim-row .face.backc .bi{display:flex;gap:16px;font-size:27px;line-height:1.4;color:#fff;}
+.lim-row .face.backc .bi::before{content:"→";color:var(--cyan);font-weight:900;}
+.lim-banner{margin-top:44px;text-align:center;font-family:var(--font-display);font-style:italic;font-weight:500;font-size:44px;color:var(--cyan);}
+
+/* ============ SLIDE 7 · LESSONS ============ */
+.lgrid{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:30px;height:calc(100% - 130px);}
+.lcard{background:var(--panel);border:1px solid var(--panel-line);border-radius:20px;padding:36px 38px;display:flex;flex-direction:column;justify-content:flex-end;position:relative;overflow:hidden;transition:transform .35s var(--ease),border-color .35s,box-shadow .35s;}
+.lcard:hover{transform:translateY(-10px);border-color:var(--cyan);box-shadow:0 26px 60px rgba(0,168,216,.16);}
+.lcard .ln{position:absolute;top:18px;right:28px;font-family:var(--font-display);font-style:italic;font-weight:400;font-size:88px;color:rgba(0,168,216,.18);line-height:1;transition:color .35s;}
+.lcard:hover .ln{color:rgba(0,168,216,.5);}
+.lcard .lt{font-family:var(--font-display);font-weight:600;font-size:35px;color:var(--white);line-height:1.15;}
+.lcard .ls{font-size:21px;color:var(--muted);line-height:1.4;margin-top:12px;}
+
+/* ============ SLIDE 8 · CLOSE ============ */
+.close-inner{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:0 130px;}
+.fireworks{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.burst{position:absolute;}
+.burst i{position:absolute;width:7px;height:7px;border-radius:50%;background:var(--cyan);opacity:0;animation:par 2.8s ease-out infinite;animation-delay:var(--dl);}
+.burst.warm i{background:#e9f3f7;}
+@keyframes par{0%{transform:rotate(var(--a)) translateY(0);opacity:0;}8%{opacity:1;}62%{transform:rotate(var(--a)) translateY(-170px);opacity:0;}100%{opacity:0;}}
+.close-kick{font-weight:900;font-size:24px;letter-spacing:.32em;text-transform:uppercase;color:var(--cyan);}
+.close-thanks{font-family:var(--font-display);font-weight:600;font-size:170px;line-height:.96;color:var(--white);letter-spacing:-.02em;margin-top:26px;}
+.close-thanks em{font-style:italic;color:var(--cyan);}
+.close-sub{font-size:30px;color:var(--muted);margin-top:34px;display:flex;align-items:center;gap:16px;}
+.close-sub svg{width:34px;height:34px;fill:var(--cyan);}
+.close-team{margin-top:44px;display:flex;gap:38px;font-size:25px;font-weight:500;color:var(--ink);opacity:.9;}
+.close-foot{position:absolute;left:130px;right:130px;bottom:58px;display:flex;align-items:center;justify-content:space-between;}
+.close-tag{font-size:21px;color:var(--muted);}
+
+/* ============ CHROME ============ */
+.deck-controls{display:flex;align-items:center;gap:16px;background:rgba(8,27,38,.7);backdrop-filter:blur(8px);color:#fff;border-radius:999px;padding:9px 16px;font-family:var(--font-body);font-size:15px;user-select:none;border:1px solid rgba(255,255,255,.12);}
+.deck-controls button{background:rgba(255,255,255,.12);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.deck-controls button:hover{background:var(--cyan);color:#062130;}
+.deck-controls .count{min-width:52px;text-align:center;letter-spacing:.06em;}
+.progress{position:fixed;left:0;top:0;height:4px;background:var(--cyan);width:0;z-index:1000;transition:width .35s var(--ease);}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="deck-viewport">
+  <main class="deck-stage" id="deckStage">
+
+    <!-- ============ SLIDE 1 · TITLE ============ -->
+    <section class="slide active">
+      <svg class="route-bg" viewBox="0 0 1920 1080" preserveAspectRatio="none">
+        <path d="M -40 880 C 300 780, 520 1010, 860 930 S 1500 700, 1980 820" pathLength="900"/>
+        <circle cx="300" cy="843" r="9"/><circle cx="860" cy="930" r="9"/><circle cx="1500" cy="795" r="9"/>
+      </svg>
+      <div class="t-wrap">
+        <div class="t-left">
+          <div class="t-kicker reveal" style="--d:.05">Online Marketing Challenge</div>
+          <h1 class="t-main reveal" style="--d:.15">Alsa-nextbike<em>Campaign 2026</em></h1>
+          <p class="t-sub reveal" style="--d:.3">Growing revenue in León with €500, two personas, and a city that never has to wait for the bus.</p>
+        </div>
+      </div>
+      <div class="t-photo reveal" style="--d:.25;background-image:url('assets/title_campus.jpg')"></div>
+      <div class="t-badge reveal" style="--d:.45">León · Spain</div>
+      <div class="t-foot reveal" style="--d:.5">
+        <div class="t-team"><span>Aditya Gupta</span><span>Keilyn Martin</span><span>Oscar Juárez</span><span>Oyeyemi Bukoye</span></div>
+        <div class="logo-pill"><img src="assets/logo_uni.png" alt="Universität Leipzig"><span class="sep"></span><img src="assets/logo_nextbike.png" alt="nextbike"></div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 2 · CLIENT ASK ============ -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="s-head reveal"><span class="s-num">01</span><h2 class="s-title">The client ask, <em>in three numbers</em></h2></div>
+        <div class="count-row">
+          <div class="count-cell reveal" style="--d:.1"><div class="big"><span data-count="53.6" data-dec="1">0</span></div><div class="cap">Median age in León — this is not a mass youth market</div></div>
+          <div class="count-cell reveal" style="--d:.2"><div class="big"><small>€</small><span data-count="500">0</span></div><div class="cap">Total paid budget — precision, not reach</div></div>
+          <div class="count-cell reveal" style="--d:.3"><div class="big"><span data-count="18">0</span>–<span data-count="40">0</span></div><div class="cap">The focused target we can actually convert</div></div>
+        </div>
+        <p class="ask-line reveal" style="--d:.4">A broad awareness push would dilute €500 in days. Instead, every euro follows one route: <b>revenue, via installs.</b></p>
+        <div class="hroute reveal" style="--d:.5">
+          <div class="line"></div>
+          <div class="station" style="left:12%"><div class="dot"></div><div class="st-t">Meta + Push</div><div class="st-s">Paid discovery &amp; free reactivation</div></div>
+          <div class="station" style="left:38%"><div class="dot"></div><div class="st-t">App installs</div><div class="st-s">≥50 installs targeted</div></div>
+          <div class="station" style="left:64%"><div class="dot"></div><div class="st-t">First ride</div><div class="st-s">Activation or reactivation</div></div>
+          <div class="station end" style="left:89%"><div class="dot"></div><div class="st-t">Subscription → Revenue</div><div class="st-s">~17 subscribers · ~€170 MRR</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 3 · SOLUTION ============ -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="s-head reveal"><span class="s-num">02</span><h2 class="s-title">One funnel, <em>two riders</em></h2></div>
+        <div class="sol-grid">
+          <div class="reveal sol-left" style="--d:.12">
+            <div class="vroute">
+              <div class="vstop"><div class="vt">TOFU · <span>Awareness</span></div><div class="vs">Local relevance + summer &amp; San Juan timing</div></div>
+              <div class="vstop"><div class="vt">MOFU · <span>Meta testing</span></div><div class="vs">12 creatives test both personas on Instagram</div></div>
+              <div class="vstop"><div class="vt">BOFU · <span>In-app push</span></div><div class="vs">Free channel reactivates lapsed users → conversion</div></div>
+            </div>
+            <div class="sol-why"><b>Why 18–40:</b> digitally reachable via Meta, app-ready, short-trip needs — the segment most likely to become repeat, paying riders.</div>
+          </div>
+          <div class="reveal" style="--d:.26">
+            <div class="ptabs">
+              <button class="ptab on" data-p="lucia">Lucía<span class="age">18–27 · Student · Social mobility</span></button>
+              <button class="ptab" data-p="carlos">Carlos<span class="age">28–40 · Professional · Convenience</span></button>
+            </div>
+            <div class="ppanel on" id="p-lucia">
+              <div class="pph" style="background-image:url('assets/msg_51points.jpg')"></div>
+              <div class="pbd">
+                <div class="prole">Persona A · tests the social angle</div>
+                <div class="pquote">“Con amigos y en cualquier momento, a donde sea.”</div>
+                <ul>
+                  <li>Affordable, spontaneous trips — price-sensitive by default</li>
+                  <li>Friends · campus · nightlife · San Juan</li>
+                  <li>Won't risk her own bike at a festival</li>
+                </ul>
+              </div>
+            </div>
+            <div class="ppanel" id="p-carlos">
+              <div class="pph" style="background-image:url('assets/msg_012day.jpg')"></div>
+              <div class="pbd">
+                <div class="prole">Persona B · tests the convenience angle</div>
+                <div class="pquote">“Para el gym, para el súper, para hoy.”</div>
+                <ul>
+                  <li>Fast, flexible short trips across the workday</li>
+                  <li>Gym · supermarket · errands</li>
+                  <li>Hates waiting for buses and hunting for parking</li>
+                </ul>
+              </div>
+            </div>
+            <div class="tap-hint"><i>↺</i> Click the tabs — the campaign tests both, the data picks the winner</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 4 · PLAN ============ -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="s-head reveal"><span class="s-num">03</span><h2 class="s-title">Test first, <em>scale what works</em></h2></div>
+        <div class="plan-grid">
+          <div class="reveal" style="--d:.1">
+            <div class="kpi-big"><div class="n">≥<span data-count="50">0</span></div><div class="c">App installs</div></div>
+            <div class="kpi-big"><div class="n">~<span data-count="17">0</span></div><div class="c">New subscribers</div></div>
+            <div class="kpi-big"><div class="n">~<small>€</small><span data-count="170">0</span></div><div class="c">Incremental MRR / month</div></div>
+          </div>
+          <div class="reveal donut-wrap" style="--d:.22">
+            <span class="label">Budget split · hover the ring</span>
+            <div class="donut" id="donut">
+              <svg viewBox="0 0 360 360" width="400" height="400">
+                <circle cx="180" cy="180" r="150" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="46"/>
+                <circle class="seg" data-l="Campaign 1.2 · Scale winners" data-v="€300" cx="180" cy="180" r="150" fill="none" stroke="var(--c-scale)"   stroke-width="46" stroke-dasharray="565.49 942.48" stroke-dashoffset="0"/>
+                <circle class="seg" data-l="Campaign 1 · Test 12 creatives" data-v="€150" cx="180" cy="180" r="150" fill="none" stroke="var(--c-test)"    stroke-width="46" stroke-dasharray="282.74 942.48" stroke-dashoffset="-565.49"/>
+                <circle class="seg" data-l="Campaign 2 · San Juan" data-v="€50" cx="180" cy="180" r="150" fill="none" stroke="var(--c-sanjuan)" stroke-width="46" stroke-dasharray="94.25 942.48"  stroke-dashoffset="-848.23"/>
+              </svg>
+              <div class="center"><div class="big" id="dBig">€500</div><div class="sub" id="dSub">26 days · 3 campaigns<br>+ push runs free</div></div>
+            </div>
+            <div class="legend">
+              <span><i style="background:var(--c-scale)"></i>Scale €300</span>
+              <span><i style="background:var(--c-test)"></i>Test €150</span>
+              <span><i style="background:var(--c-sanjuan)"></i>San Juan €50</span>
+              <span><i style="background:var(--c-push)"></i>Push €0</span>
+            </div>
+          </div>
+          <div class="reveal" style="--d:.34">
+            <span class="label" style="display:block;margin-bottom:24px">June 8 – July 3 · the route</span>
+            <div class="wroute">
+              <div class="wstop"><div class="wk">W1 · JUN 8–17</div><div class="ph">Launch</div><div class="ds">All ads live · World Bicycle Day · Push 1</div></div>
+              <div class="wstop"><div class="wk">W2 · JUN 18–22</div><div class="ph">Optimise</div><div class="ds">Cut weak ads · San Juan teaser · Push 2–3</div></div>
+              <div class="wstop"><div class="wk">W3 · JUN 22–30</div><div class="ph">Scale + Peak</div><div class="ds">C1.2 winners · San Juan peak · Push 4</div></div>
+              <div class="wstop"><div class="wk">W4 · JUN 30–JUL 3</div><div class="ph">Close</div><div class="ds">San Juan ends · monitor · export</div></div>
+            </div>
+            <div class="seqnote"><b>Sequential logic:</b> test 6 themes × 2 personas, scale the winner — or both if close — and let San Juan add a local conversion push.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 5 · MESSAGES ============ -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="s-head reveal"><span class="s-num">04</span><h2 class="s-title">Messages built for León — <em>click to read the ads</em></h2></div>
+        <div class="msg-grid">
+          <div class="flip-grid reveal" style="--d:.12">
+            <div class="flip"><div class="fin">
+              <div class="face front" style="background-image:url('assets/msg_51points.jpg')"><div class="grad"></div><span class="flag">PROOF</span><div class="ft">51 nextbike points in all León</div></div>
+              <div class="face back"><div class="bt">The ad copy</div><div class="bc">“Siempre hay una nextbike cerca cuando la necesitas. Conveniente y fácil. Descarga la app y súbete a una bici hoy mismo.”</div></div>
+            </div></div>
+            <div class="flip"><div class="fin">
+              <div class="face front" style="background-image:url('assets/msg_leavebike.jpg')"><div class="grad"></div><span class="flag">INSIGHT</span><div class="ft">Leave your bike at home</div></div>
+              <div class="face back"><div class="bt">The ad copy</div><div class="bc">“¿Llevas tu bici esta tarde? No te preocupes por ella, nosotros te prestamos una. Solo la debes desbloquear en la app.”</div></div>
+            </div></div>
+            <div class="flip"><div class="fin">
+              <div class="face front" style="background-image:url('assets/msg_firsthour.jpg')"><div class="grad"></div><span class="flag">OFFER</span><div class="ft">Your first hour is free</div></div>
+              <div class="face back"><div class="bt">The ad copy</div><div class="bc">“Tu primera hora en nextbike es gratis. Muévete sin coste la primera hora por la ciudad. Descarga la app y empieza hoy mismo.”</div></div>
+            </div></div>
+            <div class="flip"><div class="fin">
+              <div class="face front" style="background-image:url('assets/msg_012day.jpg')"><div class="grad"></div><span class="flag">PRICE</span><div class="ft">Mobility from €0.12 a day</div></div>
+              <div class="face back"><div class="bt">The ad copy</div><div class="bc">“Eso es menos de lo que cuesta un café… al mes. El complemento más barato que puedes añadir a tu movilidad en León.”</div></div>
+            </div></div>
+          </div>
+          <div class="phone-col reveal" style="--d:.3">
+            <div class="phone">
+              <div class="notch"></div>
+              <div class="scr">
+                <div class="clock" id="phClock">09:00</div>
+                <div class="date" id="phDate">Tuesday, 23 June</div>
+                <div class="notif" id="phNotif">
+                  <div class="nhead"><div class="napp">n</div><div class="nname">nextbike</div><div class="ntime" id="phTime">now</div></div>
+                  <div class="nbody" id="phBody">¡Felices fiestas de San Juan! Deja tu bici en casa y muévete por las fiestas sin complicaciones. 🎆</div>
+                </div>
+              </div>
+            </div>
+            <div class="push-nav">
+              <button id="pPrev" aria-label="Previous push">‹</button>
+              <div class="push-dots" id="pDots"><i></i><i></i><i></i><i class="on"></i></div>
+              <button id="pNext" aria-label="Next push">›</button>
+            </div>
+            <div class="push-cap"><b>4 free push notifications</b> · timed to real León moments</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 6 · LIMITATIONS ============ -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="s-head reveal"><span class="s-num">05</span><h2 class="s-title">What went wrong — <em>and how we answered</em></h2></div>
+        <div class="lim-row">
+          <div class="flip reveal" style="--d:.15"><div class="fin">
+            <div class="face frontc"><div class="ic">⏳</div><div class="ct">Design &amp; resourcing delays</div><div class="hint">Click for our response</div></div>
+            <div class="face backc"><div class="bt">Our response</div><div class="bi">Follow-ups and adjusting the campaign during waiting times</div><div class="bi">Kept momentum — no dead days in a 26-day window</div></div>
+          </div></div>
+          <div class="flip reveal" style="--d:.28"><div class="fin">
+            <div class="face frontc"><div class="ic">🤖</div><div class="ct">AI accuracy of the bikes</div><div class="hint">Click for our response</div></div>
+            <div class="face backc"><div class="bt">Our response</div><div class="bi">1-day response: corrected using official renders</div><div class="bi">Real mock-ups on real León backgrounds</div></div>
+          </div></div>
+        </div>
+        <div class="lim-banner reveal" style="--d:.4">Fast, solution-oriented, and collaborative.</div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 7 · LESSONS ============ -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="s-head reveal"><span class="s-num">06</span><h2 class="s-title">Six lessons <em>we'd hand to nextbike</em></h2></div>
+        <div class="lgrid">
+          <div class="lcard reveal" style="--d:.08"><span class="ln">01</span><div class="lt">Understand the environment</div><div class="ls">León is older and price-sensitive — strategy must start from the city, not the product.</div></div>
+          <div class="lcard reveal" style="--d:.16"><span class="ln">02</span><div class="lt">Target audience is key</div><div class="ls">A precise 18–40 beats broad awareness on a €500 budget, every time.</div></div>
+          <div class="lcard reveal" style="--d:.24"><span class="ln">03</span><div class="lt">Maintain persona testing</div><div class="ls">Let Campaign-1 data decide between Lucía and Carlos — don't guess the winner.</div></div>
+          <div class="lcard reveal" style="--d:.32"><span class="ln">04</span><div class="lt">Use real León photos</div><div class="ls">Local landmarks and real streets outperform generic bike-share imagery.</div></div>
+          <div class="lcard reveal" style="--d:.4"><span class="ln">05</span><div class="lt">Plan for contingency</div><div class="ls">Delays happen — build response time into every campaign calendar.</div></div>
+          <div class="lcard reveal" style="--d:.48"><span class="ln">06</span><div class="lt">Understand customers</div><div class="ls">Talk to real riders in León; position nextbike as a possibility, not a necessity.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 8 · CLOSE ============ -->
+    <section class="slide">
+      <div class="fireworks" id="fireworks"></div>
+      <div class="close-inner">
+        <div class="close-kick reveal" style="--d:.05">Gracias · like San Juan, we end on a high</div>
+        <div class="close-thanks reveal" style="--d:.15">Thank <em>you</em></div>
+        <div class="close-sub reveal" style="--d:.3">
+          <svg viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14zM8.34 17V9.99H6.06V17h2.28zM7.2 8.86a1.32 1.32 0 1 0 0-2.64 1.32 1.32 0 0 0 0 2.64zM18 17v-3.85c0-2.06-1.1-3.02-2.57-3.02-1.19 0-1.72.65-2.02 1.11V9.99h-2.28V17h2.28v-3.92c0-.21.02-.41.08-.56.16-.41.54-.84 1.17-.84.83 0 1.16.63 1.16 1.55V17H18z"/></svg>
+          Connect with us on LinkedIn
+        </div>
+        <div class="close-team reveal" style="--d:.4"><span>Aditya Gupta</span><span>Keilyn Martin</span><span>Oscar Juárez</span><span>Oyeyemi Bukoye</span></div>
+      </div>
+      <div class="close-foot reveal" style="--d:.5">
+        <div class="logo-pill"><img src="assets/logo_uni.png" alt="Universität Leipzig"><span class="sep"></span><img src="assets/logo_nextbike.png" alt="nextbike"></div>
+        <div class="close-tag">Alsa-nextbike · Online Marketing Challenge 2026</div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- navigation chrome -->
+<div class="deck-controls">
+  <button id="prevBtn" aria-label="Previous slide">‹</button>
+  <span class="count"><span id="curNum">1</span> / <span id="totNum">8</span></span>
+  <button id="nextBtn" aria-label="Next slide">›</button>
+</div>
+
+<script>
+/* ============ CONTROLLER ============ */
+class SlidePresentation{
+  constructor(){
+    this.slides=[...document.querySelectorAll('.slide')];
+    this.stage=document.getElementById('deckStage');
+    this.progress=document.getElementById('progress');
+    this.curNum=document.getElementById('curNum');
+    this.current=0;
+    document.getElementById('totNum').textContent=this.slides.length;
+    this.scale();window.addEventListener('resize',()=>this.scale());
+    this.keys();this.touch();this.wheel();
+    document.getElementById('prevBtn').onclick=()=>this.show(this.current-1);
+    document.getElementById('nextBtn').onclick=()=>this.show(this.current+1);
+    this.show(0);
+  }
+  scale(){
+    const f=Math.min(window.innerWidth/1920,window.innerHeight/1080);
+    const x=(window.innerWidth-1920*f)/2, y=(window.innerHeight-1080*f)/2;
+    this.stage.style.transform=`translate(${x}px,${y}px) scale(${f})`;
+  }
+  show(i){
+    this.current=Math.max(0,Math.min(i,this.slides.length-1));
+    this.slides.forEach((s,n)=>{const on=n===this.current;s.classList.toggle('active',on);s.classList.toggle('visible',on);});
+    this.curNum.textContent=this.current+1;
+    this.progress.style.width=((this.current+1)/this.slides.length*100)+'%';
+    runCounters(this.slides[this.current]);
+  }
+  keys(){
+    document.addEventListener('keydown',e=>{
+      if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();this.show(this.current+1);}
+      else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();this.show(this.current-1);}
+      else if(e.key==='Home'){this.show(0);} else if(e.key==='End'){this.show(this.slides.length-1);}
+    });
+  }
+  touch(){
+    let x0=null;
+    addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
+    addEventListener('touchend',e=>{if(x0===null)return;const dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>50)this.show(this.current+(dx<0?1:-1));x0=null;},{passive:true});
+  }
+  wheel(){
+    let lock=false;
+    addEventListener('wheel',e=>{if(lock)return;if(Math.abs(e.deltaY)<24&&Math.abs(e.deltaX)<24)return;lock=true;this.show(this.current+((e.deltaY||e.deltaX)>0?1:-1));setTimeout(()=>lock=false,650);},{passive:true});
+  }
+}
+
+/* ============ ANIMATED COUNTERS ============ */
+function runCounters(slide){
+  slide.querySelectorAll('[data-count]').forEach(el=>{
+    const target=parseFloat(el.dataset.count), dec=parseInt(el.dataset.dec||0);
+    const t0=performance.now(), dur=1300;
+    function tick(t){
+      const p=Math.min((t-t0)/dur,1), e=1-Math.pow(1-p,3);
+      el.textContent=(target*e).toFixed(dec);
+      if(p<1)requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
+}
+const deck=new SlidePresentation();
+
+/* ============ PERSONA TABS (slide 3) ============ */
+document.querySelectorAll('.ptab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.ptab').forEach(t=>t.classList.toggle('on',t===tab));
+    document.querySelectorAll('.ppanel').forEach(p=>p.classList.toggle('on',p.id==='p-'+tab.dataset.p));
+  });
+});
+
+/* ============ INTERACTIVE DONUT (slide 4) ============ */
+const donut=document.getElementById('donut');
+if(donut){
+  const big=document.getElementById('dBig'), sub=document.getElementById('dSub');
+  const D={big:big.innerHTML,sub:sub.innerHTML};
+  donut.querySelectorAll('.seg').forEach(seg=>{
+    seg.addEventListener('mouseenter',()=>{donut.classList.add('hovering');big.textContent=seg.dataset.v;sub.textContent=seg.dataset.l;});
+    seg.addEventListener('mouseleave',()=>{donut.classList.remove('hovering');big.innerHTML=D.big;sub.innerHTML=D.sub;});
+  });
+}
+
+/* ============ FLIP CARDS (slides 5 & 6) ============ */
+document.querySelectorAll('.flip').forEach(f=>f.addEventListener('click',()=>f.classList.toggle('flipped')));
+
+/* ============ PUSH NOTIFICATION CYCLER (slide 5) ============ */
+const PUSHES=[
+  {clock:'10:00',date:'Wednesday, 3 June', body:'Hoy el mundo pedalea. ¿Y tú? 🌍🚲 ¡Celebra el Día Mundial de la Bicicleta con nextbike! 51 puntos te esperan en León.'},
+  {clock:'09:00',date:'Saturday, 13 June',  body:'¿Picnic y día soleado en el Parque Quevedo? 🧺☀️🍉 Pilla una nextbike y disfruta.'},
+  {clock:'16:00',date:'Wednesday, 17 June', body:'¿Hora del gym? 💪 Llega rápido y completa tus objetivos del día con nextbike.'},
+  {clock:'09:00',date:'Tuesday, 23 June',   body:'¡Felices fiestas de San Juan! Deja tu bici en casa y muévete por las fiestas sin complicaciones. 🎆'}
+];
+let pi=3;
+function showPush(i){
+  pi=(i+PUSHES.length)%PUSHES.length;
+  const p=PUSHES[pi];
+  document.getElementById('phClock').textContent=p.clock;
+  document.getElementById('phDate').textContent=p.date;
+  const n=document.getElementById('phNotif');
+  n.style.animation='none';void n.offsetWidth;n.style.animation='';
+  document.getElementById('phBody').textContent=p.body;
+  [...document.getElementById('pDots').children].forEach((d,k)=>d.classList.toggle('on',k===pi));
+}
+document.getElementById('pPrev').addEventListener('click',()=>showPush(pi-1));
+document.getElementById('pNext').addEventListener('click',()=>showPush(pi+1));
+
+/* ============ SAN JUAN FIREWORKS (slide 8) ============ */
+(function(){
+  const host=document.getElementById('fireworks');
+  const spots=[[1450,240,'',0],[1650,470,'warm',0.9],[1260,560,'',1.7],[1720,190,'warm',2.3]];
+  spots.forEach(([x,y,cls,dl])=>{
+    const b=document.createElement('div');b.className='burst '+cls;
+    b.style.left=x+'px';b.style.top=y+'px';
+    for(let k=0;k<10;k++){
+      const p=document.createElement('i');
+      p.style.setProperty('--a',(k*36)+'deg');
+      p.style.setProperty('--dl',dl+'s');
+      b.appendChild(p);
+    }
+    host.appendChild(b);
+  });
+})();
+</script>
+</body>
+</html>

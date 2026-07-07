@@ -253,6 +253,11 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
 .deck-controls button{background:rgba(255,255,255,.12);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
 .deck-controls button:hover{background:var(--cyan);color:#062130;}
 .deck-controls .count{min-width:52px;text-align:center;letter-spacing:.06em;}
+.deck-controls .cdiv{width:1px;height:22px;background:rgba(255,255,255,.16);}
+.deck-controls .fs{font-size:14px;}
+/* Presentation (fullscreen) mode: hide the nav pill; mouse-move reveals it briefly */
+body.fs .deck-controls{opacity:0;pointer-events:none;transition:opacity .45s var(--ease);}
+body.fs.show-chrome .deck-controls{opacity:1;pointer-events:auto;}
 .progress{position:fixed;left:0;top:0;height:4px;background:var(--cyan);width:0;z-index:1000;transition:width .35s var(--ease);}
 </style>
 </head>
@@ -497,6 +502,8 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
   <button id="prevBtn" aria-label="Previous slide">‹</button>
   <span class="count"><span id="curNum">1</span> / <span id="totNum">8</span></span>
   <button id="nextBtn" aria-label="Next slide">›</button>
+  <span class="cdiv"></span>
+  <button id="fsBtn" class="fs" aria-label="Toggle fullscreen" title="Fullscreen presentation (F)">⛶</button>
 </div>
 
 <script>
@@ -618,6 +625,31 @@ document.getElementById('pNext').addEventListener('click',()=>showPush(pi+1));
     }
     host.appendChild(b);
   });
+})();
+
+/* ============ FULLSCREEN PRESENTATION MODE ============ */
+(function(){
+  const fsBtn=document.getElementById('fsBtn'), root=document.documentElement;
+  const isFS=()=>document.fullscreenElement||document.webkitFullscreenElement;
+  function enter(){try{const p=(root.requestFullscreen||root.webkitRequestFullscreen||function(){}).call(root);if(p&&p.catch)p.catch(()=>{});}catch(e){}}
+  function exit(){try{const p=(document.exitFullscreen||document.webkitExitFullscreen||function(){}).call(document);if(p&&p.catch)p.catch(()=>{});}catch(e){}}
+  function toggle(){isFS()?exit():enter();}
+  fsBtn.addEventListener('click',toggle);
+  document.addEventListener('keydown',e=>{if((e.key==='f'||e.key==='F')&&!e.target.isContentEditable){e.preventDefault();toggle();}});
+  // auto-hide the nav pill while presenting; mouse movement reveals it for 2.5s
+  let t=null;
+  function poke(){document.body.classList.add('show-chrome');clearTimeout(t);t=setTimeout(()=>document.body.classList.remove('show-chrome'),2500);}
+  function onChange(){
+    const on=!!isFS();
+    document.body.classList.toggle('fs',on);
+    fsBtn.textContent=on?'✕':'⛶';
+    fsBtn.title=on?'Exit fullscreen (F / Esc)':'Fullscreen presentation (F)';
+    deck.scale();              // re-fit the stage to the new screen size
+    if(on)poke();else document.body.classList.remove('show-chrome');
+  }
+  document.addEventListener('fullscreenchange',onChange);
+  document.addEventListener('webkitfullscreenchange',onChange);
+  document.addEventListener('mousemove',()=>{if(document.body.classList.contains('fs'))poke();});
 })();
 </script>
 </body>
